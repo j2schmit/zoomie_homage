@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Zoomie</title>
+
+<!-- ============================================================
+     HOW TO USE THIS FILE
+     1. Edit the DETAILS below (name, dates, the tribute text).
+     2. Drop your photos into an /images folder next to this file.
+     3. List each photo in the PHOTOS array near the bottom.
+     That's everything. No build step.
+     ============================================================ -->
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Nunito+Sans:wght@400;600;700&display=swap" rel="stylesheet" />
+
+<style>
+  :root {
+    --bg:    #FBFAF3;  /* warm sunlit paper */
+    --ink:   #2C382B;  /* deep meadow green-black */
+    --soft:  #6A7A63;  /* muted sage for secondary text */
+    --moss:  #5E8250;  /* grass green */
+    --amber: #E39A34;  /* golden-hour accent */
+    --sky:   #B7D0DC;  /* soft sky, used sparingly */
+    --line:  #E6E2D4;  /* hairline */
+    --shadow: 0 12px 30px rgba(44,56,43,0.12);
+  }
+
+  * { box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "Nunito Sans", system-ui, sans-serif;
+    font-size: 18px;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap { max-width: 940px; margin: 0 auto; padding: 0 24px; }
+
+  /* ---------- Hero ---------- */
+  header {
+    text-align: center;
+    padding: 88px 24px 56px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* the running path — a dashed loop that evokes the "zoomies" */
+  .path {
+    position: absolute;
+    top: 0; left: 50%;
+    transform: translateX(-50%);
+    width: 620px; max-width: 120%;
+    height: 100%;
+    pointer-events: none;
+    opacity: 0.5;
+  }
+  .path path {
+    fill: none;
+    stroke: var(--sky);
+    stroke-width: 2.5;
+    stroke-dasharray: 3 12;
+    stroke-linecap: round;
+  }
+
+  .eyebrow {
+    font-size: 0.82rem;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    color: var(--moss);
+    font-weight: 700;
+    margin: 0 0 18px;
+  }
+
+  h1 {
+    font-family: "Fraunces", serif;
+    font-optical-sizing: auto;
+    font-weight: 500;
+    font-size: clamp(4rem, 16vw, 8.5rem);
+    line-height: 0.92;
+    margin: 0;
+    letter-spacing: -0.01em;
+  }
+  /* the little dash of energy under the name */
+  h1 .dash {
+    display: block;
+    width: 92px; height: 6px;
+    margin: 22px auto 0;
+    border-radius: 6px;
+    background: linear-gradient(90deg, var(--amber), var(--moss));
+  }
+
+  .dates {
+    margin: 26px 0 0;
+    font-family: "Fraunces", serif;
+    font-style: italic;
+    font-size: 1.35rem;
+    color: var(--soft);
+  }
+
+  /* ---------- Tribute ---------- */
+  .tribute {
+    max-width: 620px;
+    margin: 8px auto 0;
+    padding: 40px 24px 8px;
+    text-align: center;
+  }
+  .tribute p { margin: 0 0 1.1em; }
+  .tribute p:first-child::first-letter {
+    font-family: "Fraunces", serif;
+    font-size: 3.2rem;
+    line-height: 0.8;
+    float: left;
+    padding: 8px 12px 0 0;
+    color: var(--amber);
+  }
+
+  /* ---------- Slideshow ---------*/
+  .slideshow {
+    max-width: 720px;
+    margin: 48px auto 0;
+    position: relative;
+  }
+  .slides {
+    aspect-ratio: 4 / 3;
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+    background: var(--line);
+  }
+  .slides img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    display: block;
+    position: absolute; inset: 0;
+    opacity: 0;
+    transition: opacity 0.8s ease;
+  }
+  .slides img.active { opacity: 1; position: relative; }
+
+  .slideshow .arrow {
+    position: absolute; top: 50%;
+    transform: translateY(-50%);
+    background: rgba(251,250,243,0.85);
+    border: none; border-radius: 50%;
+    width: 44px; height: 44px;
+    font-size: 1.4rem; color: var(--ink);
+    cursor: pointer; line-height: 1;
+    box-shadow: 0 4px 12px rgba(44,56,43,0.18);
+    transition: background 0.2s;
+  }
+  .slideshow .arrow:hover { background: #fff; }
+  .slideshow .arrow:focus-visible { outline: 3px solid var(--amber); }
+  .slideshow .prev { left: 12px; }
+  .slideshow .next { right: 12px; }
+
+  .dots { display: flex; justify-content: center; gap: 9px; margin-top: 16px; }
+  .dots button {
+    width: 9px; height: 9px; padding: 0;
+    border: none; border-radius: 50%;
+    background: var(--line); cursor: pointer;
+    transition: background 0.2s, transform 0.2s;
+  }
+  .dots button.active { background: var(--amber); transform: scale(1.25); }
+
+  /* ---------- Gallery ---------- */
+  .gallery-head {
+    text-align: center;
+    margin: 56px 0 26px;
+  }
+  .gallery-head span {
+    font-family: "Fraunces", serif;
+    font-size: 1.6rem;
+    color: var(--ink);
+    position: relative;
+  }
+  .gallery-head span::before,
+  .gallery-head span::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    width: 46px; height: 1px;
+    background: var(--line);
+  }
+  .gallery-head span::before { right: 100%; margin-right: 18px; }
+  .gallery-head span::after  { left: 100%;  margin-left: 18px; }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+    padding-bottom: 40px;
+  }
+  @media (max-width: 720px) { .grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 440px) { .grid { grid-template-columns: 1fr; } }
+
+  .grid figure {
+    margin: 0;
+    aspect-ratio: 1 / 1;
+    overflow: hidden;
+    border-radius: 14px;
+    background: var(--line);
+    cursor: pointer;
+    box-shadow: var(--shadow);
+    transition: transform 0.35s cubic-bezier(.2,.7,.2,1);
+  }
+  .grid figure:hover,
+  .grid figure:focus-visible { transform: translateY(-5px) rotate(-0.6deg); outline: none; }
+  .grid figure:focus-visible { box-shadow: 0 0 0 3px var(--amber); }
+  .grid img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform 0.5s ease;
+  }
+  .grid figure:hover img { transform: scale(1.06); }
+
+  /* ----------- Vimeo Video --------*/
+
+  .video {
+    max-width: 720px;
+    margin: 48px auto 0;
+    aspect-ratio: 16 / 9;
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+  }
+  .video iframe { width: 100%; height: 100%; border: 0; display: block; }
+
+  /* ---------- Footer ---------- */
+  footer {
+    text-align: center;
+    padding: 40px 24px 72px;
+    color: var(--soft);
+    font-size: 0.95rem;
+  }
+  footer .paw { color: var(--amber); font-size: 1.1rem; }
+
+  /* ---------- Lightbox ---------- */
+  .lightbox {
+    position: fixed; inset: 0;
+    background: rgba(28,36,27,0.92);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    z-index: 50;
+  }
+  .lightbox.open { display: flex; }
+  .lightbox img {
+    max-width: 92vw; max-height: 88vh;
+    border-radius: 10px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+  }
+  .lightbox button {
+    position: absolute; top: 20px; right: 24px;
+    background: none; border: none;
+    color: #fff; font-size: 2.4rem;
+    cursor: pointer; line-height: 1;
+    opacity: 0.8;
+  }
+  .lightbox button:hover { opacity: 1; }
+
+  /* entrance animation */
+  .reveal { opacity: 0; transform: translateY(14px); animation: rise 0.9s ease forwards; }
+  .reveal.d1 { animation-delay: 0.15s; }
+  .reveal.d2 { animation-delay: 0.30s; }
+  .reveal.d3 { animation-delay: 0.45s; }
+  @keyframes rise { to { opacity: 1; transform: none; } }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; transition: none !important; scroll-behavior: auto; }
+    .reveal { opacity: 1; transform: none; }
+  }
+</style>
+</head>
+<body>
+
+  <!-- ============ EDIT YOUR DETAILS HERE ============ -->
+  <header>
+    <svg class="path" viewBox="0 0 620 620" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+      <path d="M120,300 C120,160 260,120 340,200 C430,290 300,400 200,360 C120,330 140,470 300,500 C460,530 520,380 480,260" />
+    </svg>
+    <p class="eyebrow reveal">In loving memory</p>
+    <h1 class="reveal d1">Zoomie<span class="dash"></span></h1>
+    <p class="dates reveal d2">2011 &nbsp;&mdash;&nbsp; 2026</p>
+  </header>
+
+  <section class="tribute reveal d3">
+    <p>An homage to the legend. A fiercely loyal companion, dedicated barn dog, and dog of the world. </p>
+    <p>This is a small place to keep him. Thank you for visiting.</p>
+    <!-- Add or change any of the above. Keep it in your own voice. -->
+  </section>
+
+  <div class="slideshow" id="slideshow" aria-roledescription="carousel" aria-label="Photos of Zoomie">
+    <div class="slides" id="slides"></div>
+    <button class="arrow prev" aria-label="Previous photo">&#8249;</button>
+    <button class="arrow next" aria-label="Next photo">&#8250;</button>
+    <div class="dots" id="dots"></div>
+  </div>
+
+  <div class="wrap">
+    <div class="video">
+      <iframe
+        src="https://player.vimeo.com/video/534718419"
+        allow="autoplay; fullscreen; picture-in-picture"
+        allowfullscreen
+        title="Zoomie">
+      </iframe>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <div class="gallery-head"><span>The legend in photos</span></div>
+    <div class="grid" id="grid"></div>
+  </div>
+
+  <footer>
+    <p><span class="paw">&#10084;</span><br />
+    Zoomie &middot; the legend lives on</p>
+  </footer>
+
+  <!-- ============ ADD YOUR PHOTOS HERE ============ -->
+  <script>
+    // Put your images in an /images folder, then list them here.
+    // Each entry: { src: "images/filename.jpg", alt: "short description" }
+    const PHOTOS = [
+      { src: "images/zoom_boot.png", alt: "Zoomie's favorite cupboard spot" },
+      { src: "images/young1.jpg", alt: "Beginning of a legend" },
+      { src: "images/bat_ears.jpg", alt: "Bat ears" },
+      { src: "images/couch_passed_out.jpg", alt: "Sleep" },
+      { src: "images/zoom_twins.jpg", alt: "Twins" },
+      { src: "images/watching_the_grass.jpg", alt: "Keeping an eye on things" },
+      { src: "images/trunk_inspector.jpg", alt: "Trunk Inspector" },
+      { src: "images/blanket_inspector2.jpg", alt: "Horse Balnekt Inspector" },
+      { src: "images/hay_inspector.jpg", alt: "Hay Inspector" },
+      { src: "images/watching_the_grass.jpg", alt: "Keeping an eye on things" },
+      { src: "images/living_room_sit_zoom.jpg", alt: "Stud" },
+      { src: "images/overlook_zoom.jpg", alt: "Overlook" },
+      { src: "images/overlook_zoom2.jpg", alt: "Overlook 2" },
+      { src: "images/young2.jpg", alt: "Early Days" },
+      { src: "images/christmas_gnomes.jpg", alt: "Holiday Spirit" },
+      { src: "images/hiking.jpg", alt: "Julian Hike" },
+      { src: "images/hiking2.jpg", alt: "Julian Hike" },
+      { src: "images/hiking3.jpg", alt: "Julian Hike" },
+      { src: "images/waiting_for_mom.jpg", alt: "Waiting for Mom" },
+      { src: "images/waiting_for_mom2.jpg", alt: "More Waiting for Mom" },
+      { src: "images/caution_zoom.jpg", alt: "Making Do" },
+    ];
+
+    // ---- rendering + lightbox (no need to edit below) ----
+    const grid = document.getElementById("grid");
+    PHOTOS.forEach(p => {
+      const fig = document.createElement("figure");
+      fig.tabIndex = 0;
+      fig.innerHTML = `<img src="${p.src}" alt="${p.alt}" loading="lazy" />`;
+      fig.addEventListener("click", () => openLightbox(p.src, p.alt));
+      fig.addEventListener("keydown", e => {
+        if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openLightbox(p.src, p.alt); }
+      });
+      grid.appendChild(fig);
+    });
+
+    const lb = document.createElement("div");
+    lb.className = "lightbox";
+    lb.innerHTML = `<button aria-label="Close">&times;</button><img alt="" />`;
+    document.body.appendChild(lb);
+    const lbImg = lb.querySelector("img");
+    function openLightbox(src, alt) { lbImg.src = src; lbImg.alt = alt; lb.classList.add("open"); }
+    function closeLightbox() { lb.classList.remove("open"); }
+    lb.addEventListener("click", e => { if (e.target !== lbImg) closeLightbox(); });
+    document.addEventListener("keydown", e => { if (e.key === "Escape") closeLightbox(); });
+
+    (function () {
+      const slides = document.getElementById("slides");
+      const dots = document.getElementById("dots");
+      let i = 0, timer;
+
+      PHOTOS.forEach((p, idx) => {
+        const img = document.createElement("img");
+        img.src = p.src; img.alt = p.alt; img.loading = "lazy";
+        if (idx === 0) img.classList.add("active");
+        slides.appendChild(img);
+
+        const dot = document.createElement("button");
+        dot.setAttribute("aria-label", `Go to photo ${idx + 1}`);
+        if (idx === 0) dot.classList.add("active");
+        dot.addEventListener("click", () => go(idx));
+        dots.appendChild(dot);
+      });
+
+      const imgs = slides.querySelectorAll("img");
+      const dotEls = dots.querySelectorAll("button");
+
+      function go(n) {
+        imgs[i].classList.remove("active");
+        dotEls[i].classList.remove("active");
+        i = (n + PHOTOS.length) % PHOTOS.length;
+        imgs[i].classList.add("active");
+        dotEls[i].classList.add("active");
+      }
+
+      const next = () => go(i + 1);
+      const prev = () => go(i - 1);
+
+      document.querySelector(".next").addEventListener("click", () => { next(); restart(); });
+      document.querySelector(".prev").addEventListener("click", () => { prev(); restart(); });
+
+      document.addEventListener("keydown", e => {
+        if (e.key === "ArrowRight") { next(); restart(); }
+        if (e.key === "ArrowLeft")  { prev(); restart(); }
+      });
+
+      // auto-advance, paused on hover and if the user prefers reduced motion
+      const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      function start() { if (!reduce) timer = setInterval(next, 4000); }
+      function stop()  { clearInterval(timer); }
+      function restart() { stop(); start(); }
+
+      const box = document.getElementById("slideshow");
+      box.addEventListener("mouseenter", stop);
+      box.addEventListener("mouseleave", start);
+      start();
+    })();
+  </script>
+
+</body>
+</html>
