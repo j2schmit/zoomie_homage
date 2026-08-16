@@ -398,6 +398,14 @@
         .replace(/^./, c => c.toUpperCase()); // sentence case
     }
 
+    function shuffle(arr) {
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
+    }
+
     /* ---- Lightbox (shared) ---- */
     const lb = document.createElement("div");
     lb.className = "lightbox";
@@ -461,7 +469,7 @@
 
     fetch("images/manifest.json")
       .then(r => r.json())
-      .then(files => files.map(name => ({ src: `images/${name}`, alt: altFromFilename(name) })))
+      .then(files => shuffle(files.map(name => ({ src: `images/${name}`, alt: altFromFilename(name) }))))
       .catch(err => {
         console.error("Could not load images/manifest.json — run scripts/generate-manifest.js", err);
         return [];
