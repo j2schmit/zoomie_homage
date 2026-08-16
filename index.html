@@ -8,10 +8,13 @@
 <!-- ============================================================
      HOW TO USE THIS FILE
      1. Edit the DETAILS in the header (name, dates) and the tribute.
-     2. Drop your photos into an /images folder; list them in PHOTOS.
+     2. Drop your photos into the /images folder. The photo list is read
+        automatically from images/manifest.json at load time — run
+        `node scripts/generate-manifest.js` after adding/removing photos
+        (or let .github/workflows/generate-manifest.yml do it on push).
      3. Put your Vimeo video ID where it says VIDEO_ID.
      4. Put your MP3 at music/zoomie.mp3 (or edit the <audio> src).
-     No build step. Just open the file or push it live.
+     No build step to view it. Just open the file or push it live.
      ============================================================ -->
 
 <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -380,47 +383,20 @@
   </button>
   <audio id="audio" loop src="music/police_pon_my_back.mp3" preload="none"></audio>
 
-  <!-- ============ ADD YOUR PHOTOS HERE ============ -->
+  <!-- ============ PHOTOS (auto-loaded from images/manifest.json) ============ -->
   <script>
-    // Put your images in an /images folder, then list them here.
-    const PHOTOS = [
-      { src: "images/zoom_boot.png", alt: "Zoomie's favorite cupboard spot" },
-      { src: "images/arena2.jpg", alt: "Arena" },
-      { src: "images/young1.jpg", alt: "Beginning of a legend" },
-      { src: "images/bat_ears.jpg", alt: "Bat ears" },
-      { src: "images/couch_passed_out.jpg", alt: "Sleep" },
-      { src: "images/zoom_twins.jpg", alt: "Twins" },
-      { src: "images/watching_the_grass.jpg", alt: "Keeping an eye on things" },
-      { src: "images/trunk_inspector.jpg", alt: "Trunk Inspector" },
-      { src: "images/blanket_inspector2.jpg", alt: "Horse Blanket Inspector"},
-      { src: "images/hay_inspector.jpg", alt: "Hay Inspector" },
-      { src: "images/watching_the_grass.jpg", alt: "Keeping an eye on things" },
-      { src: "images/living_room_sit_zoom.jpg", alt: "Stud" },
-      { src: "images/overlook_zoom.jpg", alt: "Overlook" },
-      { src: "images/overlook_zoom2.jpg", alt: "Overlook 2" },
-      { src: "images/young2.jpg", alt: "Early Days" },
-      { src: "images/christmas_gnomes.jpg", alt: "Holiday Spirit" },
-      { src: "images/hiking.jpg", alt: "Julian Hike" },
-      { src: "images/hiking2.jpg", alt: "Julian Hike" },
-      { src: "images/hiking3.jpg", alt: "Julian Hike" },
-      { src: "images/waiting_for_mom.jpg", alt: "Waiting for Mom" },
-      { src: "images/waiting_for_mom2.jpg", alt: "More Waiting for Mom" },
-      { src: "images/caution_zoom.jpg", alt: "Making Do" },
-      { src: "images/attack.jpg", alt: "Attack!" },
-      { src: "images/arena.jpg", alt: "Arena" },
-      { src: "images/bowtie.jpg", alt: "Fancy" },
-      { src: "images/bucket1.jpg", alt: "Horse Bucket Water is the best" },
-      { src: "images/bucket2.jpg", alt: "Horse Bucket Water is the best" },
-      { src: "images/car.jpg", alt: "In car, watching mom" },
-      { src: "images/cozy_couch.jpg", alt: "Getting cozy" },
-      { src: "images/jacket_flood.jpg", alt: "Inspecting the flood" },
-      { src: "images/rassling1.jpg", alt: "Russeling" },
-      { src: "images/rassling3.jpg", alt: "Russeling" },
-      { src: "images/rassling2.jpg", alt: "Russeling" },
-      { src: "images/stalk.jpg", alt: "Stalking" },
-      { src: "images/turtleneck.jpg", alt: "Grandma's Turtleneck" },
-      { src: "images/wagon.jpg", alt: "Inspecting the wagon" },
-    ];
+    // The photo list isn't hand-maintained here — scripts/generate-manifest.js
+    // scans the /images folder and writes /images/manifest.json, which we
+    // fetch below. Drop photos into /images, regenerate the manifest (or let
+    // .github/workflows/generate-manifest.yml do it on push), done.
+    function altFromFilename(filename) {
+      return filename
+        .replace(/\.[^.]+$/, "")             // drop extension
+        .replace(/(\D)(\d+)$/, "$1 $2")      // "arena2" -> "arena 2"
+        .replace(/[_-]+/g, " ")              // underscores/hyphens -> spaces
+        .trim()
+        .replace(/^./, c => c.toUpperCase()); // sentence case
+    }
 
     /* ---- Lightbox (shared) ---- */
     const lb = document.createElement("div");
@@ -434,7 +410,9 @@
     document.addEventListener("keydown", e => { if (e.key === "Escape") closeLightbox(); });
 
     /* ---- Slideshow ---- */
-    (function () {
+    function initSlideshow(PHOTOS) {
+      if (!PHOTOS.length) return; // no manifest / no photos — nothing to show
+
       const slides = document.getElementById("slides");
       const dots = document.getElementById("dots");
       let i = 0, timer;
@@ -479,7 +457,16 @@
       function restart() { stop(); start(); }
 
       start();
-    })();
+    }
+
+    fetch("images/manifest.json")
+      .then(r => r.json())
+      .then(files => files.map(name => ({ src: `images/${name}`, alt: altFromFilename(name) })))
+      .catch(err => {
+        console.error("Could not load images/manifest.json — run scripts/generate-manifest.js", err);
+        return [];
+      })
+      .then(initSlideshow);
 
     /* ---- Music: manual toggle + auto-start via intro screen ---- */
     (function () {
