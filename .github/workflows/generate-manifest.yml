@@ -1,10 +1,11 @@
-name: Generate photo manifest
+name: Generate manifests
 
 on:
   push:
     branches: [main]
     paths:
       - "images/**"
+      - "music/**"
       - "scripts/generate-manifest.js"
   workflow_dispatch:
 
@@ -17,17 +18,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Generate images/manifest.json
+      - name: Generate manifest.json files
         run: node scripts/generate-manifest.js
 
-      - name: Commit manifest if changed
+      - name: Commit manifests if changed
         run: |
-          if ! git diff --quiet -- images/manifest.json; then
+          if ! git diff --quiet -- images/manifest.json music/manifest.json; then
             git config user.name "github-actions[bot]"
             git config user.email "github-actions[bot]@users.noreply.github.com"
-            git add images/manifest.json
-            git commit -m "chore: regenerate photo manifest"
+            git add images/manifest.json music/manifest.json
+            git commit -m "chore: regenerate manifests"
             git push
           else
-            echo "Manifest already up to date."
+            echo "Manifests already up to date."
           fi

@@ -334,7 +334,7 @@
   </button>
 
   <section class="tribute reveal d3">
-    <p>An homage to the legend. A fiercely loyal companion, relentless barn dog, and dog of the world. He played hard, worked hard, and he kept out the rats and coyotesoom.</p>
+    <p>An homage to the legend. A fiercely loyal companion, relentless barn dog, and dog of the world. He played hard, worked hard, gave rats no quarter, and never backed down to coyotes.</p>
   </section>
 
   <!-- ---------- Slideshow ---------- -->
@@ -376,12 +376,12 @@
     Zoomie &middot; the legend lives on</p>
   </footer>
 
-  <!-- ---------- Music (put your file at music/zoomie.mp3) ---------- -->
+  <!-- ---------- Music (shuffled from music/manifest.json) ---------- -->
   <button class="music" id="music" aria-label="Play music">
     <span class="icon" id="musicIcon">&#9654;</span>
     <span id="musicLabel">Zoomie Radio</span>
   </button>
-  <audio id="audio" loop src="music/police_pon_my_back.mp3" preload="none"></audio>
+  <audio id="audio" preload="none"></audio>
 
   <!-- ============ PHOTOS (auto-loaded from images/manifest.json) ============ -->
   <script>
@@ -476,13 +476,42 @@
       })
       .then(initSlideshow);
 
-    /* ---- Music: manual toggle + auto-start via intro screen ---- */
+    /* ---- Music: shuffled playlist from music/manifest.json ---- */
     (function () {
       const audio = document.getElementById("audio");
       const btn = document.getElementById("music");
       const icon = document.getElementById("musicIcon");
       const label = document.getElementById("musicLabel");
       const intro = document.getElementById("intro");
+
+      let playlist = [];
+      let track = 0;
+      let wantsToPlay = false; // user pressed play before the manifest loaded
+
+      function loadTrack(n) {
+        track = n;
+        audio.src = `music/${playlist[track]}`;
+      }
+
+      // When a song ends, shuffle in a fresh order once we've played through
+      // the whole playlist, so the station never plays dry.
+      audio.addEventListener("ended", () => {
+        if (!playlist.length) return;
+        let next = track + 1;
+        if (next >= playlist.length) { playlist = shuffle(playlist); next = 0; }
+        loadTrack(next);
+        audio.play().catch(() => {});
+      });
+
+      fetch("music/manifest.json")
+        .then(r => r.json())
+        .then(files => {
+          if (!files.length) return;
+          playlist = shuffle(files);
+          loadTrack(0);
+          if (wantsToPlay) audio.play().then(showPlaying).catch(() => {});
+        })
+        .catch(err => console.error("Could not load music/manifest.json — run scripts/generate-manifest.js", err));
 
       function showPlaying() {
         icon.innerHTML = "&#10074;&#10074;";
@@ -496,12 +525,15 @@
       }
 
       btn.addEventListener("click", () => {
-        if (audio.paused) { audio.play().then(showPlaying).catch(() => {}); }
-        else { audio.pause(); showPaused(); }
+        if (audio.paused) {
+          wantsToPlay = true;
+          if (playlist.length) audio.play().then(showPlaying).catch(() => {});
+        } else { audio.pause(); showPaused(); wantsToPlay = false; }
       });
 
       intro.addEventListener("click", () => {
-        audio.play().then(showPlaying).catch(() => {});
+        wantsToPlay = true;
+        if (playlist.length) audio.play().then(showPlaying).catch(() => {});
         intro.classList.add("hide");
         document.body.classList.remove("intro-active");
         intro.addEventListener("transitionend", () => intro.remove(), { once: true });
